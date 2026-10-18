@@ -12,6 +12,7 @@
 local AddOn=select(2,...);
 
 local Wrapped={};		-- [smf]=true
+local GuidStats;
 local LastScan={windows=0,found=0,cfd=false};
 
 local function Convert(msg)
@@ -92,4 +93,38 @@ SlashCmdList.CHATLINKICONSDEBUG=function()
 		print("|cff33ff99ChatLinkIcons|r ChatFrame1 bg children: "..table.concat(t,", "));
 	end
 	print("|cff33ff99ChatLinkIcons|r test: "..Convert("|cffffffff|Hitem:6948::::::::1:::::::::|h[Hearthstone]|h|r"));
+end
+
+--	Player-icon timing fix: PlayerCache learns name->GUID from CHAT_MSG_* events via
+--	EventRegistry, which can fire AFTER the chat frame has already written the line.
+--	Default UI re-renders later, but Ellesmere's frames get the text once (AddMessage),
+--	so a first-time speaker got no icon. A message event filter runs inside the chat
+--	frame's handler BEFORE the line is formatted/added, so the GUID is cached in time.
+--	It never changes or blocks the message (returns false).
+if ChatFrame_AddMessageEventFilter then
+	GuidStats={ok=0,noguid=0,noinfo=0,secret=0};
+	SLASH_CHATLINKICONSGUID1="/cliguid";
+	SlashCmdList.CHATLINKICONSGUID=function()
+		print(("|cff33ff99ChatLinkIcons|r GUID: ok=%d, missing GUID=%d (last: %s), GUID but no class info=%d (last: %s), secret=%d")
+			:format(GuidStats.ok,GuidStats.noguid,tostring(GuidStats.lastNoGuid),GuidStats.noinfo,tostring(GuidStats.lastNoInfo),GuidStats.secret));
+	end
+	local function CacheFilter(_,_,_,author,_,_,_,_,_,_,_,_,_,guid)--	(self,event,msg,author,arg3..arg11,guid=arg12)
+		if canaccessvalue and not (canaccessvalue(author) and canaccessvalue(guid)) then GuidStats.secret=GuidStats.secret+1; return false; end
+		if issecretvalue and (issecretvalue(author) or issecretvalue(guid)) then GuidStats.secret=GuidStats.secret+1; return false; end
+		if type(author)=="string" and author~="" and type(guid)=="string" and guid~="" then
+			GuidStats.ok=GuidStats.ok+1;
+			AddOn.PlayerCache_AddPlayer(author,guid);
+			local _,class=GetPlayerInfoByGUID(guid);
+			if not class then GuidStats.noinfo=GuidStats.noinfo+1; GuidStats.lastNoInfo=author; end
+		elseif type(author)=="string" and author~="" then
+			GuidStats.noguid=GuidStats.noguid+1; GuidStats.lastNoGuid=author;
+		end
+		return false;
+	end
+	for _,event in ipairs({
+		"CHAT_MSG_CHANNEL","CHAT_MSG_SAY","CHAT_MSG_YELL","CHAT_MSG_WHISPER","CHAT_MSG_WHISPER_INFORM",
+		"CHAT_MSG_PARTY","CHAT_MSG_PARTY_LEADER","CHAT_MSG_RAID","CHAT_MSG_RAID_LEADER","CHAT_MSG_RAID_WARNING",
+		"CHAT_MSG_GUILD","CHAT_MSG_OFFICER","CHAT_MSG_EMOTE","CHAT_MSG_TEXT_EMOTE",
+		"CHAT_MSG_INSTANCE_CHAT","CHAT_MSG_INSTANCE_CHAT_LEADER","CHAT_MSG_AFK","CHAT_MSG_DND",
+	}) do ChatFrame_AddMessageEventFilter(event,CacheFilter); end
 end
