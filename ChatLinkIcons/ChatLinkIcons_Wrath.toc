@@ -1,0 +1,42 @@
+## Interface: 30405
+## IconTexture: Interface\Buttons\UI-LinkProfession-Up
+## Title: ChatLinkIcons v3.11
+## Version: 3.11
+## Author: SDPhantom
+
+## OptionalDeps: Pawn, WIM
+## SavedVariables: ChatLinkIcons_Options
+
+## Notes: Displays icons for links in chat.
+
+#Translated by Anon12018248
+## Notes-esES: Muestra iconos para los enlaces en el chat.
+## Notes-esMX: Muestra iconos para los enlaces en el chat.
+## Notes-frFR: Affiche des icônes pour les liens dans la discussion.
+## Notes-ptBR: Mostra ícones para links no bate-papo.
+## Notes-ruRU: Отображает значки для ссылок в чате
+## Notes-zhCN: 顯示聊天中連結的圖示。
+
+Localization.lua
+Callbacks.lua
+Events.lua
+PlayerCache.lua
+Options.lua
+LinkConverter.lua
+
+LinkProcessors\Tools.lua
+LinkProcessors\Achievement.lua
+#LinkProcessors\BattlePet.lua
+LinkProcessors\Calendar.lua
+#LinkProcessors\Garrison.lua
+LinkProcessors\Item.lua
+LinkProcessors\Player.lua
+LinkProcessors\Spell.lua
+LinkProcessors\Tradeskill.lua
+#LinkProcessors\Transmog.lua
+
+Integration\Tools.lua
+Integration\GlobalAPI.lua
+Integration\DefaultUI.lua
+Integration\Pawn.lua
+Integration\WIM.lua
